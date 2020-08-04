@@ -29,7 +29,9 @@ func (client *Client) startNode() error {
 		storageBackend(storageClient.BackendName).
 		appendNetwork(client.net).
 		appendSeedNodes(client.net).
-		runtimeTagIndexerBackend("bleve")
+		runtimeTagIndexerBackend("bleve").
+		tendermintRecoverCorruptedWAL(client.consensus.TendermintRecoverCorruptedWAL)
+
 	for _, v := range client.net.runtimes {
 		if v.kind != registry.KindCompute {
 			continue

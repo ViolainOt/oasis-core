@@ -118,7 +118,9 @@ func (worker *Storage) startNode() error {
 		workerStorageDebugIgnoreApplies(worker.ignoreApplies).
 		workerStorageCheckpointCheckInterval(worker.checkpointCheckInterval).
 		appendNetwork(worker.net).
-		appendEntity(worker.entity)
+		appendEntity(worker.entity).
+		tendermintRecoverCorruptedWAL(worker.consensus.TendermintRecoverCorruptedWAL)
+
 	var runtimeArray []*Runtime
 	if len(worker.runtimes) > 0 {
 		for _, idx := range worker.runtimes {

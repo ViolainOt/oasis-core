@@ -80,7 +80,8 @@ func (sentry *Sentry) startNode() error {
 		tendermintPrune(sentry.consensus.PruneNumKept).
 		appendNetwork(sentry.net).
 		appendSeedNodes(sentry.net).
-		internalSocketAddress(sentry.net.validators[0].SocketPath())
+		internalSocketAddress(sentry.net.validators[0].SocketPath()).
+		tendermintRecoverCorruptedWAL(sentry.consensus.TendermintRecoverCorruptedWAL)
 
 	if len(validators) > 0 {
 		args = args.addValidatorsAsSentryUpstreams(validators)

@@ -278,7 +278,8 @@ func (km *Keymanager) startNode() error {
 		workerKeymanagerEnabled().
 		workerKeymanagerRuntimeID(km.runtime.id).
 		appendNetwork(km.net).
-		appendEntity(km.entity)
+		appendEntity(km.entity).
+		tendermintRecoverCorruptedWAL(km.consensus.TendermintRecoverCorruptedWAL)
 
 	if km.mayGenerate {
 		args = args.workerKeymanagerMayGenerate()

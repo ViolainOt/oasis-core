@@ -107,7 +107,8 @@ func (worker *Compute) startNode() error {
 		workerTxnschedulerCheckTxEnabled().
 		appendNetwork(worker.net).
 		appendSeedNodes(worker.net).
-		appendEntity(worker.entity)
+		appendEntity(worker.entity).
+		tendermintRecoverCorruptedWAL(worker.consensus.TendermintRecoverCorruptedWAL)
 
 	for _, idx := range worker.runtimes {
 		v := worker.net.runtimes[idx]

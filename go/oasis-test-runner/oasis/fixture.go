@@ -325,6 +325,8 @@ type StorageWorkerFixture struct { // nolint: maligned
 	AllowEarlyTermination bool `json:"allow_early_termination"`
 	AllowErrorTermination bool `json:"allow_error_termination"`
 
+	NoAutoStart bool `json:"no_auto_start,omitempty"`
+
 	DisableCertRotation bool `json:"disable_cert_rotation"`
 
 	LogWatcherHandlerFactories []log.WatcherHandlerFactory `json:"-"`
@@ -353,6 +355,7 @@ func (f *StorageWorkerFixture) Create(net *Network) (*Storage, error) {
 		NodeCfg: NodeCfg{
 			AllowEarlyTermination:      f.AllowEarlyTermination,
 			AllowErrorTermination:      f.AllowErrorTermination,
+			NoAutoStart:                f.NoAutoStart,
 			LogWatcherHandlerFactories: f.LogWatcherHandlerFactories,
 			Consensus:                  f.Consensus,
 		},

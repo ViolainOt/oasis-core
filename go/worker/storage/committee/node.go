@@ -649,13 +649,36 @@ func (n *Node) worker() { // nolint: gocyclo
 
 	heap.Init(outOfOrderDiffs)
 
-	close(n.initCh)
-
 	// We are now ready to service requests.
-	n.roleProvider.SetAvailable(func(nd *node.Node) error {
+	registeredCh := make(chan interface{})
+	n.roleProvider.SetAvailableWithCallback(func(nd *node.Node) error {
 		nd.AddOrUpdateRuntime(n.commonNode.Runtime.ID())
 		return nil
+	}, func(ctx context.Context) error {
+		close(registeredCh)
+		return nil
 	})
+
+	// Wait for the registration to finish, because we'll need to ask
+	// questions immediately.
+	n.logger.Debug("waiting for node registration to finish")
+	select {
+	case <-registeredCh:
+	case <-n.ctx.Done():
+		return
+	}
+
+	// Try to perform initial sync from state and io checkpoints.
+	if err = n.syncCheckpoints(); err != nil {
+		n.logger.Info("checkpoint sync failed", "err", err)
+	} else {
+		n.logger.Info("checkpoint sync succeeded",
+			logging.LogEvent, LogEventCheckpointSyncSuccess,
+		)
+	}
+
+	// Once the initial sync is done, we're officially done with initialization.
+	close(n.initCh)
 
 	// Main processing loop. When a new block comes in, its state and io roots are inspected and their
 	// writelogs fetched from remote storage nodes in case we don't have them locally yet. Fetches are

@@ -186,6 +186,7 @@ func (net *Network) NewStorage(cfg *StorageCfg) (*Storage, error) {
 			Name:                                     storageName,
 			net:                                      net,
 			dir:                                      storageDir,
+			noAutoStart:                              cfg.NoAutoStart,
 			disableDefaultLogWatcherHandlerFactories: cfg.DisableDefaultLogWatcherHandlerFactories,
 			logWatcherHandlerFactories:               cfg.LogWatcherHandlerFactories,
 			consensus:                                cfg.Consensus,

@@ -2,13 +2,12 @@ package byzantine
 
 import (
 	"encoding/base64"
-	"fmt"
 	"testing"
 
 	"github.com/stretchr/testify/require"
 
 	"github.com/oasisprotocol/oasis-core/go/common"
-	"github.com/oasisprotocol/oasis-core/go/consensus/tendermint/apps/beacon"
+	"github.com/oasisprotocol/oasis-core/go/consensus/tendermint/apps/beapoch"
 	schedulerapp "github.com/oasisprotocol/oasis-core/go/consensus/tendermint/apps/scheduler"
 	epochtime "github.com/oasisprotocol/oasis-core/go/epochtime/api"
 	scheduler "github.com/oasisprotocol/oasis-core/go/scheduler/api"
@@ -19,7 +18,7 @@ func hasSuitablePermutations(t *testing.T, beacon []byte, runtimeID common.Names
 	computeIdxs, err := schedulerapp.GetPerm(beacon, runtimeID, schedulerapp.RNGContextExecutor, numComputeNodes)
 	require.NoError(t, err, "schedulerapp.GetPerm compute")
 
-	fmt.Printf("%20s schedule %v\n", scheduler.KindComputeExecutor, computeIdxs)
+	t.Logf("%20s schedule %v\n", scheduler.KindComputeExecutor, computeIdxs)
 
 	committees := map[scheduler.CommitteeKind]struct {
 		workers       int
@@ -53,13 +52,13 @@ func hasSuitablePermutations(t *testing.T, beacon []byte, runtimeID common.Names
 				}
 			}
 			if !conflict {
-				fmt.Printf("suitable %s slot %d\n", c1Kind, c1Slot)
+				t.Logf("suitable %s slot %d\n", c1Kind, c1Slot)
 				foundSuitable = true
 				break
 			}
 		}
 		if !foundSuitable {
-			fmt.Printf("no suitable %s slot\n", c1Kind)
+			t.Logf("no suitable %s slot\n", c1Kind)
 			return false
 		}
 	}
@@ -70,12 +69,12 @@ func TestDebugSchedule(t *testing.T) {
 	var epoch epochtime.EpochTime = 2
 	var runtimeID common.Namespace
 	require.NoError(t, runtimeID.UnmarshalHex("8000000000000000000000000000000000000000000000000000000000000000"), "runtimeID.UnmarshalHex")
-	deterministicBeaconEntropy := []byte("If you change this, you will fuck up the byzantine tests!!")
+	deterministicBeaconEntropy := append([]byte{}, beapoch.DebugEntropy...)
 	for {
-		fmt.Printf("assessing seed %s\n", deterministicBeaconEntropy)
+		t.Logf("assessing seed: '%s'\n", deterministicBeaconEntropy)
 
-		b := beacon.GetBeacon(epoch, beacon.DebugEntropyCtx, deterministicBeaconEntropy)
-		fmt.Printf("beacon %s\n", base64.StdEncoding.EncodeToString(b))
+		b := beapoch.GetBeacon(epoch, beapoch.DebugEntropyCtx, deterministicBeaconEntropy)
+		t.Logf("beacon: '%s'\n", base64.StdEncoding.EncodeToString(b))
 
 		if hasSuitablePermutations(t, b, runtimeID) {
 			break

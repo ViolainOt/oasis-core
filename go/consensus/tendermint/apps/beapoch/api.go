@@ -1,4 +1,4 @@
-package epochtimemock
+package beapoch
 
 import (
 	"github.com/oasisprotocol/oasis-core/go/consensus/api/transaction"
@@ -8,25 +8,27 @@ import (
 
 const (
 	// AppID is the unique application identifier.
-	AppID uint8 = 0x03
+	AppID uint8 = 0x08
 
 	// AppName is the ABCI application name.
-	//
-	// Note: It must be lexographically before any application that
-	// uses time keeping.
-	AppName string = "000_epochtime_mock"
+	// Run before all other applications.
+	AppName string = "000_beapoch"
 )
 
 var (
-	// EventType is the ABCI event type for mock epochtime events.
+	// EventType is the ABCI event type for beacon/epoch events.
 	EventType = api.EventTypeForApp(AppName)
 
-	// QueryApp is a query for filtering events processed by
-	// the mock epochtime application.
+	// QueryApp is the query for filtering events procecessed by the
+	// beapochtime application.
 	QueryApp = api.QueryForApp(AppName)
 
 	// KeyEpoch is an ABCI event attribute for specifying the set epoch.
 	KeyEpoch = []byte("epoch")
+
+	// KeyBeacon is the ABCI event attribute key for the new
+	// beacons (value is a CBOR serialized beacon.GenerateEvent).
+	KeyBeacon = []byte("beacon")
 
 	// MethodSetEpoch is the method name for setting epochs.
 	MethodSetEpoch = transaction.NewMethodName(AppName, "SetEpoch", epochtime.EpochTime(0))

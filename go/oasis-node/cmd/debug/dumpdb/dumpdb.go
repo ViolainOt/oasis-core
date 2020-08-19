@@ -19,7 +19,7 @@ import (
 	"github.com/oasisprotocol/oasis-core/go/consensus/tendermint/abci"
 	abciState "github.com/oasisprotocol/oasis-core/go/consensus/tendermint/abci/state"
 	tendermintAPI "github.com/oasisprotocol/oasis-core/go/consensus/tendermint/api"
-	beaconApp "github.com/oasisprotocol/oasis-core/go/consensus/tendermint/apps/beacon"
+	beapochApp "github.com/oasisprotocol/oasis-core/go/consensus/tendermint/apps/beapoch"
 	keymanagerApp "github.com/oasisprotocol/oasis-core/go/consensus/tendermint/apps/keymanager"
 	registryApp "github.com/oasisprotocol/oasis-core/go/consensus/tendermint/apps/registry"
 	roothashApp "github.com/oasisprotocol/oasis-core/go/consensus/tendermint/apps/roothash"
@@ -325,7 +325,7 @@ func dumpScheduler(ctx context.Context, qs *dumpQueryState) (*scheduler.Genesis,
 }
 
 func dumpBeacon(ctx context.Context, qs *dumpQueryState) (*beacon.Genesis, error) {
-	qf := beaconApp.NewQueryFactory(qs)
+	qf := beapochApp.NewQueryFactory(qs)
 	q, err := qf.QueryAt(ctx, qs.BlockHeight())
 	if err != nil {
 		return nil, fmt.Errorf("dumpdb: failed to create beacon query: %w", err)
@@ -334,7 +334,7 @@ func dumpBeacon(ctx context.Context, qs *dumpQueryState) (*beacon.Genesis, error
 	if err != nil {
 		return nil, fmt.Errorf("dumpdb: failed to dump beacon state: %w", err)
 	}
-	return st, nil
+	return &st.Beacon, nil
 }
 
 func dumpConsensus(ctx context.Context, qs *dumpQueryState) (*consensus.Genesis, error) {

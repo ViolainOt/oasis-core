@@ -19,8 +19,8 @@ import (
 	"github.com/oasisprotocol/oasis-core/go/common/quantity"
 	"github.com/oasisprotocol/oasis-core/go/consensus/api/transaction"
 	"github.com/oasisprotocol/oasis-core/go/consensus/tendermint/api"
-	beaconapp "github.com/oasisprotocol/oasis-core/go/consensus/tendermint/apps/beacon"
-	beaconState "github.com/oasisprotocol/oasis-core/go/consensus/tendermint/apps/beacon/state"
+	beapochapp "github.com/oasisprotocol/oasis-core/go/consensus/tendermint/apps/beapoch"
+	beapochState "github.com/oasisprotocol/oasis-core/go/consensus/tendermint/apps/beapoch/state"
 	registryapp "github.com/oasisprotocol/oasis-core/go/consensus/tendermint/apps/registry"
 	registryState "github.com/oasisprotocol/oasis-core/go/consensus/tendermint/apps/registry/state"
 	schedulerState "github.com/oasisprotocol/oasis-core/go/consensus/tendermint/apps/scheduler/state"
@@ -64,7 +64,7 @@ func (app *schedulerApplication) Blessed() bool {
 }
 
 func (app *schedulerApplication) Dependencies() []string {
-	return []string{beaconapp.AppName, registryapp.AppName, stakingapp.AppName}
+	return []string{beapochapp.AppName, registryapp.AppName, stakingapp.AppName}
 }
 
 func (app *schedulerApplication) OnRegister(state api.ApplicationState) {
@@ -92,7 +92,7 @@ func (app *schedulerApplication) BeginBlock(ctx *api.Context, request types.Requ
 			return nil
 		}
 
-		beacState := beaconState.NewMutableState(ctx.State())
+		beacState := beapochState.NewMutableState(ctx.State())
 		beacon, err := beacState.Beacon(ctx)
 		if err != nil {
 			return fmt.Errorf("tendermint/scheduler: couldn't get beacon: %w", err)

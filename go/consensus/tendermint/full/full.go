@@ -51,12 +51,10 @@ import (
 	"github.com/oasisprotocol/oasis-core/go/consensus/tendermint/abci"
 	"github.com/oasisprotocol/oasis-core/go/consensus/tendermint/api"
 	"github.com/oasisprotocol/oasis-core/go/consensus/tendermint/apps/supplementarysanity"
-	tmbeacon "github.com/oasisprotocol/oasis-core/go/consensus/tendermint/beacon"
+	tmbeapoch "github.com/oasisprotocol/oasis-core/go/consensus/tendermint/beapoch"
 	tmcommon "github.com/oasisprotocol/oasis-core/go/consensus/tendermint/common"
 	"github.com/oasisprotocol/oasis-core/go/consensus/tendermint/crypto"
 	"github.com/oasisprotocol/oasis-core/go/consensus/tendermint/db"
-	tmepochtime "github.com/oasisprotocol/oasis-core/go/consensus/tendermint/epochtime"
-	tmepochtimemock "github.com/oasisprotocol/oasis-core/go/consensus/tendermint/epochtime_mock"
 	tmkeymanager "github.com/oasisprotocol/oasis-core/go/consensus/tendermint/keymanager"
 	"github.com/oasisprotocol/oasis-core/go/consensus/tendermint/light"
 	tmregistry "github.com/oasisprotocol/oasis-core/go/consensus/tendermint/registry"
@@ -908,25 +906,28 @@ func (t *fullService) initialize() error {
 		}
 	}
 
-	if err := t.initEpochtime(); err != nil {
-		return err
-	}
-	if err := t.mux.SetEpochtime(t.epochtime); err != nil {
-		return err
-	}
+	// Initialize the beacon/epochtime backends.
+	var (
+		err error
 
-	// Initialize the rest of backends.
-	var err error
-	var scBeacon tmbeacon.ServiceClient
-	if scBeacon, err = tmbeacon.New(t.ctx, t); err != nil {
-		t.Logger.Error("initialize: failed to initialize beacon backend",
+		scBeacon    tmbeapoch.BeaconServiceClient
+		scEpochTime tmbeapoch.EpochTimeServiceClient
+	)
+	if scBeacon, scEpochTime, err = tmbeapoch.New(t.ctx, t); err != nil {
+		t.Logger.Error("initialize: failed to initialize beapoch backend",
 			"err", err,
 		)
 		return err
 	}
-	t.beacon = scBeacon
-	t.serviceClients = append(t.serviceClients, scBeacon)
+	t.beacon, t.epochtime = scBeacon, scEpochTime
+	t.serviceClients = append(t.serviceClients, []api.ServiceClient{
+		scBeacon, scEpochTime,
+	}...)
+	if err = t.mux.SetEpochtime(t.epochtime); err != nil {
+		return err
+	}
 
+	// Initialize the rest of backends.
 	var scKeyManager tmkeymanager.ServiceClient
 	if scKeyManager, err = tmkeymanager.New(t.ctx, t); err != nil {
 		t.Logger.Error("initialize: failed to initialize keymanager backend",
@@ -1060,34 +1061,6 @@ func (t *fullService) WatchTendermintBlocks() (<-chan *tmtypes.Block, *pubsub.Su
 
 func (t *fullService) ConsensusKey() signature.PublicKey {
 	return t.identity.ConsensusSigner.Public()
-}
-
-func (t *fullService) initEpochtime() error {
-	var err error
-	if t.genesis.EpochTime.Parameters.DebugMockBackend {
-		var scEpochTime tmepochtimemock.ServiceClient
-		scEpochTime, err = tmepochtimemock.New(t.ctx, t)
-		if err != nil {
-			t.Logger.Error("initEpochtime: failed to initialize mock epochtime backend",
-				"err", err,
-			)
-			return err
-		}
-		t.epochtime = scEpochTime
-		t.serviceClients = append(t.serviceClients, scEpochTime)
-	} else {
-		var scEpochTime tmepochtime.ServiceClient
-		scEpochTime, err = tmepochtime.New(t.ctx, t, t.genesis.EpochTime.Parameters.Interval)
-		if err != nil {
-			t.Logger.Error("initEpochtime: failed to initialize epochtime backend",
-				"err", err,
-			)
-			return err
-		}
-		t.epochtime = scEpochTime
-		t.serviceClients = append(t.serviceClients, scEpochTime)
-	}
-	return nil
 }
 
 func (t *fullService) lazyInit() error {

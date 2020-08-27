@@ -40,6 +40,8 @@ func (app *beapochApplication) InitChain(ctx *api.Context, req types.RequestInit
 		ctx.Logger().Warn("Determistic beacon entropy is NOT FOR PRODUCTION USE")
 	}
 
+	// If the backend is configured to use explicitly set epochs, there
+	// is nothing further to do.
 	if isMockEpochTime(params) {
 		return nil
 	}
@@ -50,8 +52,10 @@ func (app *beapochApplication) InitChain(ctx *api.Context, req types.RequestInit
 		return fmt.Errorf("failed to set initial epoch: %w", err)
 	}
 
+	app.doEmitEpochEvent(ctx, baseEpoch)
+
 	// Arm the initial epoch transition.
-	if err := app.scheduleEpochTransitionBlock(ctx, state, params, baseEpoch); err != nil {
+	if err := app.scheduleEpochTransitionBlock(ctx, state, params, baseEpoch+1); err != nil {
 		return fmt.Errorf("failed to schedule epoch transition: %w", err)
 	}
 

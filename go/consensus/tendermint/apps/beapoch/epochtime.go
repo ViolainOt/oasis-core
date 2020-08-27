@@ -61,7 +61,7 @@ func (app *beapochApplication) onBeginBlockEpoch(
 		}
 	}
 
-	ctx.EmitEvent(api.NewEventBuilder(app.Name()).Attribute(KeyEpoch, cbor.Marshal(future.Epoch)))
+	app.doEmitEpochEvent(ctx, future.Epoch)
 
 	return true, future.Epoch, nil
 }
@@ -120,6 +120,10 @@ func (app *beapochApplication) doTxSetEpoch(ctx *api.Context, state *beapochStat
 		return err
 	}
 	return nil
+}
+
+func (app *beapochApplication) doEmitEpochEvent(ctx *api.Context, epoch epochtime.EpochTime) {
+	ctx.EmitEvent(api.NewEventBuilder(app.Name()).Attribute(KeyEpoch, cbor.Marshal(epoch)))
 }
 
 func isMockEpochTime(params *beapochState.ConsensusParameters) bool {

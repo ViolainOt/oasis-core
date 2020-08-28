@@ -253,7 +253,18 @@ func (s *applicationState) afterHaltEpoch(ctx *api.Context) bool {
 		return false
 	}
 
-	return currentEpoch > s.haltEpochHeight
+	// HACK HACK HACK
+	epochBlock, err := s.timeSource.GetEpochBlock(ctx, currentEpoch)
+	if err != nil {
+		s.logger.Error("afterHaltEpoch: failed to get transition block",
+			"err", err,
+			"block_height", blockHeight,
+		)
+		return false
+	}
+	return blockHeight+1 > epochBlock+100 // XXX: Make this configurable.
+
+	// return currentEpoch > s.haltEpochHeight
 }
 
 func (s *applicationState) doInitChain(now time.Time) error {
